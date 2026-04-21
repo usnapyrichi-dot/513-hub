@@ -12,11 +12,16 @@ export default function UpdatePasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Instantiate client on mount to ensure it parses the #access_token from URL
+  const [supabase] = useState(() => createClient());
+
+  // Optionally set a flag when session is ready if needed, but it's usually fast enough
+  // before the user types the 6 characters.
+
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    const supabase = createClient();
     const { error } = await supabase.auth.updateUser({ password });
     
     if (error) {
