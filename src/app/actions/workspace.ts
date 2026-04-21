@@ -124,7 +124,7 @@ export async function inviteWorkspaceMember(email: string, role: string) {
 
   // Invite user via Supabase Auth
   const { data: authData, error: authError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') ? 'http://localhost:3000' : 'https://513-hub.vercel.app'}/auth/callback?next=/`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SUPABASE_URL?.includes('localhost') ? 'http://localhost:3000' : 'https://513-hub.vercel.app'}/update-password`,
   });
 
   if (authError) {

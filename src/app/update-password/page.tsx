@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -15,8 +15,25 @@ export default function UpdatePasswordPage() {
   // Instantiate client on mount to ensure it parses the #access_token from URL
   const [supabase] = useState(() => createClient());
 
-  // Optionally set a flag when session is ready if needed, but it's usually fast enough
-  // before the user types the 6 characters.
+  // Force manual parse of hash if needed (Fallback for implicit flow)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token")) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get("access_token");
+      const refreshToken = params.get("refresh_token");
+      
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }).catch(err => console.error("Manual session set failed:", err));
+      }
+      
+      // Clean URL to avoid leaking tokens
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [supabase]);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
