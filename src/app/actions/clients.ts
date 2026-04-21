@@ -18,12 +18,39 @@ export async function createClientAction(name: string) {
 export async function createClientModel(clientId: string, formData: FormData) {
   const supabase = await createClient();
   const workspace_id = await resolveWorkspaceId();
+  
   const name = formData.get('name') as string;
   const category = formData.get('category') as string;
-  const year = parseInt(formData.get('year') as string) || new Date().getFullYear();
+  const product_type = (formData.get('product_type') as string) || "vehicle";
+  const year = parseInt(formData.get('year') as string) || null;
+  const thumbnail_url = (formData.get('thumbnail_url') as string) || null;
+  const drive_folder_url = (formData.get('drive_folder_url') as string) || null;
+  
+  // Parse dynamic features from a hidden JSON input or multiple fields
+  let features = [];
+  const featuresRaw = formData.get('features') as string;
+  if (featuresRaw) {
+    try {
+      features = JSON.parse(featuresRaw);
+    } catch (e) {
+      console.error("Error parsing features JSON", e);
+    }
+  }
+
   const { error } = await supabase
     .from('car_models')
-    .insert([{ workspace_id, client_id: clientId, name, category, year }]);
+    .insert([{ 
+      workspace_id, 
+      client_id: clientId, 
+      name, 
+      category, 
+      product_type,
+      year: product_type === 'vehicle' ? year : null,
+      thumbnail_url,
+      drive_folder_url,
+      features
+    }]);
+
   if (error) return { success: false, error: error.message };
   revalidatePath(`/clients`);
   revalidatePath(`/clients/${clientId}`);

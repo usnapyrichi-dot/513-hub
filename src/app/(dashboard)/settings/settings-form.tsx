@@ -5,8 +5,9 @@ import { Header } from "@/components/layout/header";
 import {
   Building2, Key, Bell, Save, Loader2,
   Eye, EyeOff, CheckCircle2, ExternalLink,
+  Users, Plus
 } from "lucide-react";
-import { updateWorkspaceSettings } from "@/app/actions/workspace";
+import { updateWorkspaceSettings, inviteWorkspaceMember } from "@/app/actions/workspace";
 
 function Section({ icon: Icon, title, description, children }: {
   icon: React.ElementType; title: string; description: string; children: React.ReactNode;
@@ -54,7 +55,7 @@ function Field({ label, value, onChange, placeholder, type = "text", mono = fals
   );
 }
 
-export function SettingsForm({ initialData }: { initialData: any }) {
+export function SettingsForm({ initialData, initialMembers = [] }: { initialData: any, initialMembers?: any[] }) {
   const [agencyName,    setAgencyName]    = useState(initialData?.agency_name ?? "513 HUB");
   const [agencyTagline, setAgencyTagline] = useState(initialData?.tagline ?? "Editorial Studio");
   const [notifStatus,   setNotifStatus]   = useState(initialData?.notification_prefs?.notif_status ?? true);
@@ -62,7 +63,26 @@ export function SettingsForm({ initialData }: { initialData: any }) {
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
 
+  // Team Management State
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("admin");
+  const [inviting, setInviting] = useState(false);
+
+  const handleInvite = async () => {
+    if (!inviteEmail) return;
+    setInviting(true);
+    const result = await inviteWorkspaceMember(inviteEmail, inviteRole);
+    setInviting(false);
+    if (result.success) {
+      alert("Invitación enviada correctamente.");
+      setInviteEmail("");
+    } else {
+      alert(result.error);
+    }
+  };
+
   const handleSave = async () => {
+
     setSaving(true);
     try {
       await updateWorkspaceSettings({
@@ -120,6 +140,74 @@ export function SettingsForm({ initialData }: { initialData: any }) {
               className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#949494] hover:text-[#1C1C1C] transition-colors">
               Supabase Dashboard <ExternalLink className="w-3 h-3" />
             </a>
+          </div>
+        </Section>
+
+        {/* Team Management */}
+        <Section icon={Users} title="Equipo" description="Gestiona los miembros de tu agencia y sus accesos">
+          <div className="space-y-6">
+            {/* Invite Form */}
+            <div className="flex items-end gap-3 p-4 bg-[#F8F6F6] border border-[#E5E5E5] rounded-sm">
+              <div className="flex-1">
+                <Field 
+                  label="Email del nuevo miembro" 
+                  value={inviteEmail} 
+                  onChange={setInviteEmail} 
+                  placeholder="ejemplo@513hub.col" 
+                />
+              </div>
+              <div className="w-1/3 space-y-1.5">
+                <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#949494] block">ROL</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="w-full h-10 px-3 border border-[#E5E5E5] rounded-sm text-[12px] text-[#1C1C1C] focus:outline-none focus:border-[#1C1C1C] bg-white cursor-pointer"
+                >
+                  <option value="admin">Admin</option>
+                  <option value="social_manager">Social Manager</option>
+                  <option value="creative_copy">Creative Copy</option>
+                  <option value="creative_art">Creative Art</option>
+                  <option value="editor_designer">Editor / Designer</option>
+                  <option value="client_viewer">Client Viewer</option>
+                </select>
+              </div>
+              <button
+                onClick={handleInvite}
+                disabled={inviting || !inviteEmail}
+                className="h-10 px-4 flex items-center justify-center bg-[#1C1C1C] hover:bg-black text-white text-[10px] font-bold uppercase tracking-widest rounded-sm transition-colors disabled:opacity-50"
+              >
+                {inviting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Invitar"}
+              </button>
+            </div>
+
+            {/* Members List */}
+            <div className="space-y-2">
+              <label className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#949494] block">MIEMBROS ACTUALES</label>
+              <div className="border border-[#E5E5E5] rounded-sm divide-y divide-[#E5E5E5]">
+                {initialMembers.length === 0 ? (
+                  <p className="p-4 text-xs text-[#949494]">No hay miembros aún.</p>
+                ) : (
+                  initialMembers.map((member: any) => (
+                    <div key={member.id} className="p-4 flex items-center justify-between bg-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-[#FAFAFA] border border-[#E5E5E5] rounded-full flex items-center justify-center text-[10px] font-bold text-[#1C1C1C]">
+                          {member.profiles?.full_name?.charAt(0) || member.profiles?.email?.charAt(0) || "?"}
+                        </div>
+                        <div>
+                          <p className="text-[12px] font-bold text-[#1C1C1C]">{member.profiles?.full_name || member.profiles?.email}</p>
+                          {member.profiles?.full_name && (
+                            <p className="text-[10px] text-[#949494]">{member.profiles.email}</p>
+                          )}
+                        </div>
+                      </div>
+                      <span className="px-2 py-1 bg-[#F8F6F6] text-[#949494] text-[10px] uppercase font-bold tracking-widest rounded-sm">
+                        {member.role.replace("_", " ")}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
           </div>
         </Section>
 

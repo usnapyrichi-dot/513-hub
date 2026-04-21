@@ -125,11 +125,15 @@ export interface CarModel {
   workspace_id: string;
   client_id: string;
   name: string;
+  product_type: "vehicle" | "other" | null;
   category: string | null;
   year: number | null;
   key_technologies: string[];
   tech_specs: Record<string, string> | null;
   reference_images: string[];
+  thumbnail_url: string | null;
+  drive_folder_url: string | null;
+  features: { key: string; value: string }[] | null;
   created_at: string;
   // Relations
   client?: Client;
