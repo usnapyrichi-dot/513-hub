@@ -1,17 +1,27 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { resolveWorkspaceId } from "@/lib/supabase/workspace";
+import { getCurrentWorkspace, resolveWorkspaceId } from "@/lib/supabase/workspace";
 import { revalidatePath } from "next/cache";
 
 export async function getWorkspaceSettings() {
   const supabase = await createClient();
-  const workspaceId = await resolveWorkspaceId();
+  const ws = await getCurrentWorkspace();
+
+  // No workspace yet (user authenticated but not assigned to a workspace) → return defaults
+  if (!ws) {
+    return {
+      agency_name: "Mi Agencia",
+      tagline: "",
+      timezone: "Europe/Madrid",
+      notification_prefs: { notif_status: true, notif_review: true },
+    };
+  }
 
   const { data, error } = await supabase
     .from("workspace_settings")
     .select("agency_name, tagline, timezone, notification_prefs")
-    .eq("workspace_id", workspaceId)
+    .eq("workspace_id", ws.workspaceId)
     .single();
 
   if (error) {
