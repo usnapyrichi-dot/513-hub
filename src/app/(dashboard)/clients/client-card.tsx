@@ -64,7 +64,7 @@ export function ClientCard({ client }: Props) {
               </Badge>
             </div>
             <span className="px-3.5 py-1.5 rounded-sm text-[13px] font-medium bg-[#FAFAFA] text-[#1C1C1C] border border-[#E5E5E5] inline-block">
-              Administrar Vehículos →
+              Administrar Modelos →
             </span>
           </div>
 
