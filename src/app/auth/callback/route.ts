@@ -22,6 +22,9 @@ export async function GET(request: Request) {
     }
   }
 
-  // return the user to an error page with instructions
-  return NextResponse.redirect(`${origin}/login?error=Invalid+Link`)
+  // If there is no code, it might be an Implicit flow with #access_token
+  // Browsers will keep the #hash across redirects, so we send them to update-password
+  // and the Supabase Client SDK there will pick up the token and log them in
+  if (next === '/') next = '/update-password'
+  return NextResponse.redirect(`${origin}${next}`)
 }
